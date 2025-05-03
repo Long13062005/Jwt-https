@@ -4,6 +4,7 @@ package com.hunglevi.jwthttpscookie.security;
 import com.hunglevi.jwthttpscookie.security.service.JpaUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,19 @@ public class JWTAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwtToken;
+        String jwtToken = null;
         final String userEmail;
+
+        for (Cookie cookie : request.getCookies()) {
+            if (cookie.getName().equals("jwt")) {
+                jwtToken = cookie.getValue();
+            }
+        }
+        if (jwtToken == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
 
         if (authHeader == null || authHeader.isBlank()) {
             filterChain.doFilter(request, response);
